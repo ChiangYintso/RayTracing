@@ -3,7 +3,8 @@ project(RayTracing)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(ray_tracing src/color.cpp)
+file(GLOB_RECURSE RAY_TRACING_SRC src/*.cpp)
+add_library(ray_tracing ${RAY_TRACING_SRC})
 target_include_directories(ray_tracing PUBLIC include)
 
 # add binary executables
