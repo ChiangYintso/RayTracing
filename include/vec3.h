@@ -32,6 +32,8 @@ class vec3 {
   double operator[](int i) const { return e[i]; }
   double &operator[](int i) { return e[i]; }
 
+  [[nodiscard]] bool near_zero() const;
+
   vec3 &operator+=(const vec3 &v) {
 	e[0] += v.e[0];
 	e[1] += v.e[1];
@@ -115,3 +117,9 @@ inline vec3 unit_vector(vec3 v) {
 vec3 random_in_unit_sphere();
 
 vec3 random_unit_vector();
+
+vec3 reflect(const vec3& v, const vec3& n);
+
+vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat);
+
+vec3 random_in_unit_disk();

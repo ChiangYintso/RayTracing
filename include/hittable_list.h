@@ -13,7 +13,7 @@ using std::shared_ptr;
 
 class hittable_list : public Hittable {
  public:
-  hittable_list() {}
+  hittable_list() = default;
   hittable_list(shared_ptr<Hittable> object) { add(object); }
 
   void clear() { objects.clear(); }
