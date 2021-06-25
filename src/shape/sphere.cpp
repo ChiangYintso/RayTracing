@@ -2,7 +2,7 @@
 // Created by Jiang Yinzuo on 2021/6/24.
 //
 
-#include "sphere.h"
+#include "shape/sphere.h"
 
 bool Sphere::hit(const Ray &r, double t_min, double t_max, hit_record &rec) const {
   vec3 oc = r.origin() - center;

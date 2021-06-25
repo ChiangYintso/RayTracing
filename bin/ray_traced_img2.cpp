@@ -6,7 +6,7 @@
 
 #include "color.h"
 #include "hittable_list.h"
-#include "sphere.h"
+#include "shape/sphere.h"
 #include <memory>
 #include <iostream>
 
