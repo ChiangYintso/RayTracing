@@ -7,9 +7,9 @@
 #include "vec3.h"
 #include "ray.h"
 
-class camera {
+class Camera {
  public:
-  camera(
+  Camera(
 	  point3 lookfrom,
 	  point3 lookat,
 	  vec3   vup,
