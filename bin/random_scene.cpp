@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <iostream>
+#include <thread>
 
 using std::make_shared;
 
@@ -41,12 +42,12 @@ hittable_list random_scene() {
   hittable_list world;
 
   auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
-  world.add(make_shared<Sphere>(point3(0,-1000,0), 1000, ground_material));
+  world.add(make_shared<Sphere>(point3(0, -1000, 0), 1000, ground_material));
 
   for (int a = -4; a < 4; a++) {
 	for (int b = -4; b < 4; b++) {
 	  auto choose_mat = random_double();
-	  point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
+	  point3 center(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
 
 	  if ((center - point3(4, 0.2, 0)).length() > 0.9) {
 		shared_ptr<material> sphere_material;
@@ -83,49 +84,70 @@ hittable_list random_scene() {
   return world;
 }
 
-int main() {
-
+class Render {
+ private:
   // Image
+  constexpr static double aspect_ratio = 3.0 / 2.0;
+  constexpr static int image_width = 400;
+  constexpr static int image_height = static_cast<int>(image_width / aspect_ratio);
+  constexpr static int samples_per_pixel = 500;
+  constexpr static int max_depth = 50;
+ public:
+  explicit Render(const char *file_name) : world_(random_scene()) {
+	point3 lookfrom(13, 2, 3);
+	point3 lookat(0, 0, 0);
+	vec3 vup(0, 1, 0);
+	auto dist_to_focus = 10.0;
+	auto aperture = 0.1;
 
-  const auto aspect_ratio = 3.0 / 2.0;
-  const int image_width = 400;
-  const int image_height = static_cast<int>(image_width / aspect_ratio);
-  const int samples_per_pixel = 500;
-  const int max_depth = 50;
-
-  // World
-
-  auto world = random_scene();
-
-  // Camera
-
-  point3 lookfrom(13,2,3);
-  point3 lookat(0,0,0);
-  vec3 vup(0,1,0);
-  auto dist_to_focus = 10.0;
-  auto aperture = 0.1;
-
-  Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
-
-  // Render
-  JPGWriter jpg_writer("random_scene.jpg", image_width, image_height);
-//  std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-
-  for (int j = image_height - 1; j >= 0; --j) {
-	std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-	for (int i = 0; i < image_width; ++i) {
-	  color pixel_color(0, 0, 0);
-	  for (int s = 0; s < samples_per_pixel; ++s) {
-		auto u = (i + random_double()) / (image_width - 1);
-		auto v = (j + random_double()) / (image_height - 1);
-		Ray r = cam.get_ray(u, v);
-		pixel_color += ray_color(r, world, max_depth);
-	  }
-	  jpg_writer.WriteColor(pixel_color, samples_per_pixel);
-//	  write_color(std::cout, pixel_color, samples_per_pixel);
-	}
+	cam_ = new Camera(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+	jpg_writer_ = new JPGWriter(file_name, image_width, image_height);
   }
 
+  Render(Render &) = delete;
+  Render &operator=(Render &) = delete;
+
+  void Start() {
+	int image_height_mid = image_height / 2;
+	std::thread t1(Render::RenderTask,
+	this, image_height - 1, image_height_mid);
+	std::thread t2(Render::RenderTask,
+	this, image_height_mid - 1, 0);
+
+	t1.join();
+	t2.join();
+  }
+
+  ~Render() {
+	delete cam_;
+	delete jpg_writer_;
+  }
+
+ private:
+  hittable_list world_;
+  Camera *cam_;
+  JPGWriter *jpg_writer_;
+
+  static void RenderTask(Render *render, int image_height_max, int image_height_min) {
+	for (int j = image_height_max; j >= image_height_min; --j) {
+	  std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+	  for (int i = 0; i < image_width; ++i) {
+		color pixel_color(0, 0, 0);
+		for (int s = 0; s < samples_per_pixel; ++s) {
+		  auto u = (i + random_double()) / (image_width - 1);
+		  auto v = (j + random_double()) / (image_height - 1);
+		  Ray r = render->cam_->get_ray(u, v);
+		  pixel_color += ray_color(r, render->world_, max_depth);
+		}
+		render->jpg_writer_->WriteColor(pixel_color, i, image_height_max - j, samples_per_pixel);
+	  }
+	}
+  }
+};
+
+int main() {
+  Render r{"render.jpg"};
+  r.Start();
   std::cerr << "\nDone.\n";
   return 0;
 }

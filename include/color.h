@@ -20,12 +20,11 @@ class JPGWriter {
 
   ~JPGWriter();
 
-  void WriteColor(color pixel_color, int samples_per_pixel);
+  void WriteColor(color pixel_color, int x, int y, int samples_per_pixel);
 
  private:
   const char *file_name_;
-  int w_;
-  int h_;
+  const int w_;
+  const int h_;
   unsigned char *data_;
-  int pixel_idx_ = 0;
 };

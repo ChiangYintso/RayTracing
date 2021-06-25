@@ -45,7 +45,7 @@ JPGWriter::~JPGWriter() {
   free(data_);
 }
 
-void JPGWriter::WriteColor(color pixel_color, int samples_per_pixel) {
+void JPGWriter::WriteColor(color pixel_color, int x, int y, int samples_per_pixel) {
   auto r = pixel_color.x();
   auto g = pixel_color.y();
   auto b = pixel_color.z();
@@ -55,8 +55,8 @@ void JPGWriter::WriteColor(color pixel_color, int samples_per_pixel) {
   r = sqrt(scale * r);
   g = sqrt(scale * g);
   b = sqrt(scale * b);
-  data_[pixel_idx_ * 3] = static_cast<unsigned char>(256 * clamp(r, 0.0, 0.999));
-  data_[pixel_idx_ * 3 + 1] = static_cast<unsigned char>(256 * clamp(g, 0.0, 0.999));
-  data_[pixel_idx_ * 3 + 2] = static_cast<unsigned char>(256 * clamp(b, 0.0, 0.999));
-  ++pixel_idx_;
+  int idx = y * w_ + x;
+  data_[idx * 3] = static_cast<unsigned char>(256 * clamp(r, 0.0, 0.999));
+  data_[idx * 3 + 1] = static_cast<unsigned char>(256 * clamp(g, 0.0, 0.999));
+  data_[idx * 3 + 2] = static_cast<unsigned char>(256 * clamp(b, 0.0, 0.999));
 }
